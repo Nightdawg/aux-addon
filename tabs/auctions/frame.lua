@@ -59,4 +59,15 @@ do
     btn:SetScript('OnClick', function()
         scan_auctions()
     end)
+    refresh_button = btn
+end
+do
+    local btn = gui.button(frame)
+    btn:SetPoint('TOPLEFT', refresh_button, 'TOPRIGHT', 5, 0)
+    btn:SetText('Scan Undercuts')
+    btn:SetScript('OnClick', function()
+        scan_undercuts()
+    end)
+    btn:SetWidth(125)
+   scan_undercuts_button = btn
 end

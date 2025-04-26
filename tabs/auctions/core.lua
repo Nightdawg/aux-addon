@@ -22,50 +22,36 @@ function update_listing()
     listing:SetDatabase(auction_records)
 end
 
-function scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys)
+function M.scan_auctions()
 
-    status_bar:update_status((undercutIndex + 1) / auctionCount, 0)
-    status_bar:set_text(format('Scanning undercuts (Auction %d / %d)', (undercutIndex + 1), auctionCount))
+    status_bar:update_status(0, 0)
+    status_bar:set_text('Scanning auctions...')
 
-    local auction_key = auctionKeys[undercutIndex]
-    local auction_record = auction_records[auction_key]
-    undercutIndex = undercutIndex + 1
-    auction_record.undercut = false
-    local item_key = auction_record.item_key
-
-    --Create Query
-    local query = scan_util.item_query(auction_record.item_id) -- Not sure about auction_record.item_id
-
-    scan_id = scan.start{
-        type = 'list',
-        ignore_owner = true,
-		queries = T.list(query),
-		on_auction = function(auction_record_inner)
-                if auction_record_inner.item_key == item_key then
-                    if auction_record_inner.unit_buyout_price < auction_record.unit_buyout_price then
-                        auction_record.undercut = true
-                        scan.stop();
-                    end
-                end
-		end,
+    T.wipe(auction_records)
+    update_listing()
+    scan.start{
+        type = 'owner',
+        queries = {{blizzard_query = T.acquire()}},
+        on_page_loaded = function(page, total_pages)
+            status_bar:update_status(page / total_pages, 0)
+            status_bar:set_text(format('Scanning (Page %d / %d)', page, total_pages))
+        end,
+        on_auction = function(auction_record)
+            tinsert(auction_records, auction_record)
+        end,
+        on_complete = function()
+            status_bar:update_status(1, 1)
+            status_bar:set_text('Scan complete')
+            update_listing()
+        end,
         on_abort = function()
             status_bar:update_status(1, 1)
             status_bar:set_text('Scan aborted')
         end,
-		on_complete = function()
-			--Not Undercutted, Start Next Scan
-            if undercutIndex < (auctionCount - 1) then
-                scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys)
-            else
-                status_bar:update_status(1, 1)
-                status_bar:set_text('Scan complete')
-                update_listing()
-            end
-        end,
-	}
+    }
 end
 
-function M.scan_auctions()
+function M.scan_undercuts()
 
     status_bar:update_status(0, 0)
     status_bar:set_text('Scanning auctions...')
@@ -110,6 +96,49 @@ function M.scan_auctions()
             status_bar:set_text('Scan aborted')
         end,
     }
+end
+
+function scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys)
+
+    status_bar:update_status((undercutIndex + 1) / auctionCount, 0)
+    status_bar:set_text(format('Scanning undercuts (Auction %d / %d)', (undercutIndex + 1), auctionCount))
+
+    local auction_key = auctionKeys[undercutIndex]
+    local auction_record = auction_records[auction_key]
+    undercutIndex = undercutIndex + 1
+    auction_record.undercut = false
+    local item_key = auction_record.item_key
+
+    --Create Query
+    local query = scan_util.item_query(auction_record.item_id) -- Not sure about auction_record.item_id
+
+    scan_id = scan.start{
+        type = 'list',
+        ignore_owner = true,
+		queries = T.list(query),
+		on_auction = function(auction_record_inner)
+                if auction_record_inner.item_key == item_key then
+                    if auction_record_inner.unit_buyout_price < auction_record.unit_buyout_price then
+                        auction_record.undercut = true
+                        scan.stop();
+                    end
+                end
+		end,
+        on_abort = function()
+            status_bar:update_status(1, 1)
+            status_bar:set_text('Scan aborted')
+        end,
+		on_complete = function()
+			--Not Undercutted, Start Next Scan
+            if undercutIndex < (auctionCount - 1) then
+                scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys)
+            else
+                status_bar:update_status(1, 1)
+                status_bar:set_text('Scan complete')
+                update_listing()
+            end
+        end,
+	}
 end
 
 do
