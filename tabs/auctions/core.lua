@@ -22,14 +22,15 @@ function update_listing()
     listing:SetDatabase(auction_records)
 end
 
-function scan_undercut(undercutIndex, auctionCount, auction_records)
+function scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys)
 
     status_bar:update_status((undercutIndex + 1) / auctionCount, 0)
     status_bar:set_text(format('Scanning undercuts (Auction %d / %d)', (undercutIndex + 1), auctionCount))
 
-    local auction_record = auction_records[undercutIndex]
+    local auction_key = auctionKeys[undercutIndex]
+    local auction_record = auction_records[auction_key]
     undercutIndex = undercutIndex + 1
-    auction_record['undercut'] = false
+    auction_record.undercut = false
     local item_key = auction_record.item_key
 
     --Create Query
@@ -42,8 +43,8 @@ function scan_undercut(undercutIndex, auctionCount, auction_records)
 		on_auction = function(auction_record_inner)
                 if auction_record_inner.item_key == item_key then
                     if auction_record_inner.unit_buyout_price < auction_record.unit_buyout_price then
-                        auction_record['undercut'] = true
-                        scan.abort(scan_id)
+                        auction_record.undercut = true
+                        scan.abort(scan_id) -- NEXT: THE NEXT SCAN DOES NOT START, SYNCRONIZATION ISSUE?
                     end
                 end
 		end,
@@ -90,12 +91,20 @@ function M.scan_auctions()
             tinsert(auction_records, auction_record)
         end,
         on_complete = function()
-            -- Scan for Undercuts for Each Auction
-            local undercutIndex = 0;
             local auctionCount = table.getn(auction_records)
 
+            -- Scan for Undercuts for Each Auction
             if auctionCount > 0 then
-                scan_undercut(undercutIndex, auctionCount, auction_records)
+                local auctionKeys = {}
+                local auctionKeyIndex = 0;
+
+                -- Create a Auction Keys Collection
+                for key, value in pairs(auction_records) do
+                    table.insert(auctionKeys, auctionKeyIndex, key)
+                    auctionKeyIndex = auctionKeyIndex + 1
+                end
+
+                scan_undercut(0, auctionCount, auction_records, auctionKeys)
             else
                 status_bar:update_status(1, 1)
                 status_bar:set_text('Scan complete')
