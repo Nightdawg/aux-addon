@@ -352,14 +352,18 @@ M.auctions_columns = {
         width = .125,
         align = 'CENTER',
         fill = function(cell, record)
-            if record.undercut then
-                cell.text:SetText(aux.color.red 'True')
-            else
-                cell.text:SetText(aux.color.green 'False')
+            if (record.undercut ~= nil) then
+                if record.undercut then
+                    cell.text:SetText(aux.color.red 'True')
+                else
+                    cell.text:SetText(aux.color.green 'False')
+                end
             end
         end,
         cmp = function(record_a, record_b, desc)
-            if record_a.undercut and record_b.undercut then
+            if record_a.undercut == nil or record_b.undercut == nil then
+                return sort_util.EQ
+            elseif record_a.undercut and record_b.undercut then
                 return sort_util.EQ
             elseif not record_a.undercut and not record_b.undercut then
                 return sort_util.EQ

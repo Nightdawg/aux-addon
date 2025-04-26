@@ -1,5 +1,8 @@
 # aux Turtle
 
+* TODO: Make Default Undercut State nil
+* TODO: Add Cancel Logic to Work with Scan Undercuts Button
+
 * Shares some price data through the LFT chat when searching the AH, use **/aux sharing** to disable sending and receiving data.
 * Accurate auction durations for Turtle WoW.
 * Autocompletion for custom Turtle WoW items.

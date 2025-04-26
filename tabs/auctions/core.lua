@@ -130,7 +130,7 @@ function scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys
         end,
 		on_complete = function()
 			--Not Undercutted, Start Next Scan
-            if undercutIndex < (auctionCount - 1) then
+            if undercutIndex < auctionCount then
                 scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys)
             else
                 status_bar:update_status(1, 1)
