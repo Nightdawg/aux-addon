@@ -517,6 +517,7 @@ function refresh_entries()
         status_bar:update_status(0, 0)
         status_bar:set_text('Scanning auctions...')
 
+        -- Refresh Entries Scan ? --
 		scan_id = scan.start{
             type = 'list',
             ignore_owner = true,

@@ -348,6 +348,29 @@ M.auctions_columns = {
         end,
     },
     {
+        title = 'Undercut',
+        width = .125,
+        align = 'CENTER',
+        fill = function(cell, record)
+            if record.undercut then
+                cell.text:SetText(aux.color.red 'True')
+            else
+                cell.text:SetText(aux.color.green 'False')
+            end
+        end,
+        cmp = function(record_a, record_b, desc)
+            if record_a.undercut and record_b.undercut then
+                return sort_util.EQ
+            elseif not record_a.undercut and not record_b.undercut then
+                return sort_util.EQ
+            elseif record_a.undercut and not record_b.undercut or desc then
+                return sort_util.GT
+            else
+                return sort_util.LT
+            end
+        end,
+    },
+    {
         title = 'High Bidder',
         width = .21,
         align = 'CENTER',
