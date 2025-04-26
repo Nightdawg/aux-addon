@@ -44,26 +44,18 @@ function scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys
                 if auction_record_inner.item_key == item_key then
                     if auction_record_inner.unit_buyout_price < auction_record.unit_buyout_price then
                         auction_record.undercut = true
-                        scan.abort(scan_id) -- NEXT: THE NEXT SCAN DOES NOT START, SYNCRONIZATION ISSUE?
+                        scan.stop();
                     end
                 end
 		end,
         on_abort = function()
-            --Was Undercutted, Start Next Scan
-            if undercutIndex > auctionCount - 1 then
-                --Call Next Undercut Scan Recursively
-                scan_undercut(undercutIndex, auctionCount, auction_records)
-            else
-                status_bar:update_status(1, 1)
-                status_bar:set_text('Scan complete')
-                update_listing()
-            end
+            status_bar:update_status(1, 1)
+            status_bar:set_text('Scan aborted')
         end,
 		on_complete = function()
 			--Not Undercutted, Start Next Scan
-            if undercutIndex > auctionCount - 1 then
-                --Call Next Scan Recursively
-                scan_undercut(undercutIndex, auctionCount, auction_records)
+            if undercutIndex < (auctionCount - 1) then
+                scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys)
             else
                 status_bar:update_status(1, 1)
                 status_bar:set_text('Scan complete')
@@ -108,6 +100,8 @@ function M.scan_auctions()
             else
                 status_bar:update_status(1, 1)
                 status_bar:set_text('Scan complete')
+                
+                -- Update DB Listings
                 update_listing()
             end
         end,
