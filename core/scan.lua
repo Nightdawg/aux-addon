@@ -46,7 +46,7 @@ do
 		get_state().stopped = true
 	end
 
-	function complete()
+	function M.complete()
 		local on_complete = get_state().params.on_complete
 		scan_states[get_state().params.type] = nil
 		do (on_complete or pass)() end

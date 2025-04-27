@@ -119,12 +119,14 @@ function scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys
 		on_auction = function(auction_record_inner)
                 if auction_record.unit_buyout_price == nil then
                     --auction_record.undercut = nil
-                    --scan.stop(); this is the correct way to stop a scan. Must be missing something.
+                    scan.stop()
+                    scan.complete()
                 end
                 if auction_record_inner.item_key == item_key then
                     if auction_record_inner.unit_buyout_price ~= nil and auction_record_inner.unit_buyout_price < auction_record.unit_buyout_price then
                         auction_record.undercut = true
-                        --scan.stop();
+                        scan.stop()
+                        scan.complete()
                     end
                 end
 		end,
