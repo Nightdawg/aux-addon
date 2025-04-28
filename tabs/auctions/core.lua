@@ -86,8 +86,8 @@ function M.scan_undercuts()
             else
                 status_bar:update_status(1, 1)
                 status_bar:set_text('Scan complete')
-                
-                -- Update DB Listings
+
+                 -- Update DB Listings
                 update_listing()
             end
         end,
@@ -101,7 +101,7 @@ end
 function scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys)
 
     status_bar:update_status((undercutIndex + 1) / auctionCount, 0)
-    status_bar:set_text(format('Scanning undercuts (Auction %d / %d)', (undercutIndex + 1), auctionCount))
+    status_bar:set_text(format('Scanning undercuts (Auction %d / %d) - %d%%', (undercutIndex + 1), auctionCount, math.ceil(((undercutIndex + 1) / auctionCount) * 100)))
 
     local auction_key = auctionKeys[undercutIndex]
     local auction_record = auction_records[auction_key]
@@ -120,19 +120,25 @@ function scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys
                 if auction_record.unit_buyout_price == nil then
                     --auction_record.undercut = nil
                     scan.stop()
-                    scan.complete()
+                    scan.abort()
                 end
                 if auction_record_inner.item_key == item_key then
                     if auction_record_inner.unit_buyout_price ~= nil and auction_record_inner.unit_buyout_price < auction_record.unit_buyout_price then
                         auction_record.undercut = true
                         scan.stop()
-                        scan.complete()
+                        scan.abort()
                     end
                 end
 		end,
         on_abort = function()
-            status_bar:update_status(1, 1)
-            status_bar:set_text('Scan aborted')
+  	        --Not Undercutted, Start Next Scan
+            if undercutIndex < auctionCount then
+                scan_undercut(undercutIndex, auctionCount, auction_records, auctionKeys)
+            else
+                status_bar:update_status(1, 1)
+                status_bar:set_text('Scan complete')
+                update_listing()
+            end
         end,
 		on_complete = function()
 			--Not Undercutted, Start Next Scan
