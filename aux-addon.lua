@@ -2,6 +2,7 @@ module 'aux'
 
 local T = require 'T'
 local post = require 'aux.tabs.post'
+local gui = require 'aux.gui'
 
 M.print = T.vararg-function(arg)
 	DEFAULT_CHAT_FRAME:AddMessage(LIGHTYELLOW_FONT_COLOR_CODE .. '<aux> ' .. join(map(arg, tostring), ' '))
@@ -22,12 +23,15 @@ local set_handler = {}
 M.handle = setmetatable({}, {__metatable=false, __newindex=function(_, k, v) set_handler[k](v) end})
 
 do
-	local handlers, handlers2 = {}, {}
+	local handlers_INIT_UI, handlers_LOAD, handlers_LOAD2 = {}, {}, {}
+    function set_handler.INIT_UI(f)
+		tinsert(handlers_INIT_UI, f)
+	end
 	function set_handler.LOAD(f)
-		tinsert(handlers, f)
+		tinsert(handlers_LOAD, f)
 	end
 	function set_handler.LOAD2(f)
-		tinsert(handlers2, f)
+		tinsert(handlers_LOAD2, f)
 	end
 	event_frame:SetScript('OnEvent', function()
 		if event == 'ADDON_LOADED' then
@@ -35,10 +39,13 @@ do
                 auction_ui_loaded()
 			end
 		elseif event == 'VARIABLES_LOADED' then
-			for _, f in handlers do f() end
+            gui.set_global_theme(aux and aux.account and aux.account.theme)
+            for _, f in handlers_INIT_UI do f() end
+            for _, f in handlers_LOAD do f() end
 		elseif event == 'PLAYER_LOGIN' then
-			for _, f in handlers2 do f() end
+			for _, f in handlers_LOAD2 do f() end
 			print('loaded - /aux')
+			DEFAULT_CHAT_FRAME:AddMessage(LIGHTYELLOW_FONT_COLOR_CODE .. 'aux now comes with a new blizz-like theme. If you wish to switch between themes, use /aux theme')
 		else
 			_M[event]()
 		end
@@ -60,12 +67,14 @@ function handle.LOAD()
         post_bid = false,
         post_duration = post.DURATION_24,
 		post_stack = true,
+	undercut = true,
         items = {},
         item_ids = {},
         auctionable_items = {},
         merchant_buy = {},
         merchant_sell = {},
 		sharing = true,
+        theme = 'blizzard',
     })
     do
         local key = format('%s|%s', GetCVar'realmName', UnitName'player')

@@ -64,7 +64,7 @@ local methods = {
 	    end
 
 	    if getn(self.rowData or T.empty) > self.numRows then
-		    self.contentFrame:SetPoint('BOTTOMRIGHT', -15, 0)
+		    self.contentFrame:SetPoint('BOTTOMRIGHT', gui.is_blizzard() and -30 or -15, 0)
 	    else
 		    self.contentFrame:SetPoint('BOTTOMRIGHT', 0, 0)
 	    end
@@ -178,9 +178,14 @@ local methods = {
 
 	    local tex = col:CreateTexture()
 	    tex:SetAllPoints()
-	    tex:SetTexture([[Interface\AddOns\aux-AddOn\WorldStateFinalScore-Highlight]])
-	    tex:SetTexCoord(.017, 1, .083, .909)
-	    tex:SetAlpha(.5)
+        if not gui.is_blizzard() then
+            tex:SetTexture([[Interface\AddOns\aux-AddOn\WorldStateFinalScore-Highlight]])
+            tex:SetTexCoord(.017, 1, .083, .909)
+            tex:SetAlpha(.5)
+        else
+            tex:SetTexture([[Interface\QuestFrame\UI-QuestTitleHighlight]])
+            tex:SetTexCoord(0.1, 0.8, 0, 1)
+        end
 
         tinsert(self.headCols, col)
         
@@ -229,7 +234,11 @@ local methods = {
         end
         local highlight = row:CreateTexture()
         highlight:SetAllPoints()
-        highlight:SetTexture(1, .9, 0, .4)
+        if not gui.is_blizzard() then
+            highlight:SetTexture(1, .9, 0, .4)
+        else
+            highlight:SetTexture([[Interface\QuestFrame\UI-QuestTitleHighlight]])
+        end
         highlight:Hide()
         row.highlight = highlight
         row.st = self
@@ -260,7 +269,7 @@ function M.new(parent)
     local st = CreateFrame('Frame', gui.unique_name(), parent)
     st:SetAllPoints()
 
-    st.numRows = max(floor((parent:GetHeight() - HEAD_HEIGHT - HEAD_SPACE) / ROW_HEIGHT), 0)
+    st.numRows = max(floor(((parent:GetHeight() / parent:GetEffectiveScale()) - HEAD_HEIGHT - HEAD_SPACE) / ROW_HEIGHT), 0)
 
     local contentFrame = CreateFrame('Frame', nil, st)
     contentFrame:SetPoint('TOPLEFT', 0, 0)
@@ -274,18 +283,11 @@ function M.new(parent)
     scrollFrame:SetAllPoints(contentFrame)
     st.scrollFrame = scrollFrame
 
-    local scroll_bar = _G[scrollFrame:GetName() .. 'ScrollBar']
-    scroll_bar:ClearAllPoints()
-    scroll_bar:SetPoint('TOPRIGHT', st, -4, -HEAD_HEIGHT)
-    scroll_bar:SetPoint('BOTTOMRIGHT', st, -4, 4)
-    scroll_bar:SetWidth(10)
-    local thumbTex = scroll_bar:GetThumbTexture()
-    thumbTex:SetPoint('CENTER', 0, 0)
-    thumbTex:SetTexture(aux.color.content.background())
-    thumbTex:SetHeight(150)
-    thumbTex:SetWidth(scroll_bar:GetWidth())
-    _G[scroll_bar:GetName() .. 'ScrollUpButton']:Hide()
-    _G[scroll_bar:GetName() .. 'ScrollDownButton']:Hide()
+    gui.set_scrollbar_style(scrollFrame, not gui.is_blizzard() and {
+        {'TOPRIGHT', parent, -4, -HEAD_HEIGHT}, {'BOTTOMRIGHT', parent, -4, 4} -- Default
+    } or {
+        {'TOPRIGHT', parent, -7, -20}, {'BOTTOMRIGHT', parent, -7, 18} -- Blizzard
+    })
 
     for name, func in methods do
         st[name] = func

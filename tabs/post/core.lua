@@ -336,6 +336,7 @@ function update_item_configuration()
         deposit:Hide()
         duration_dropdown:Hide()
         hide_checkbox:Hide()
+        vendor_price_label:Hide()
     else
 		unit_start_price_input:Show()
         unit_buyout_price_input:Show()
@@ -344,6 +345,7 @@ function update_item_configuration()
         deposit:Show()
         duration_dropdown:Show()
         hide_checkbox:Show()
+        vendor_price_label:Show()
 
         item.texture:SetTexture(selected_item.texture)
         item.name:SetText('[' .. selected_item.name .. ']')
@@ -365,7 +367,20 @@ function update_item_configuration()
             local duration_factor = UIDropDownMenu_GetSelectedValue(duration_dropdown) / 120
             local stack_size, stack_count = selected_item.max_charges and 1 or stack_size_slider:GetValue(), stack_count_slider:GetValue()
             local amount = floor(selected_item.unit_vendor_price * deposit_factor * stack_size) * stack_count * duration_factor
+            amount = floor(amount * 0.6) --according to nelethor this should be more accurate, would like to get accurate fee eventually
             deposit:SetText('Deposit: ' .. money.to_string(amount, nil, nil, aux.color.text.enabled))
+        end
+
+        --vendor price
+        do
+            local unit_vendor_price = selected_item.unit_vendor_price
+            if not unit_vendor_price then
+                vendor_price_label:SetText("Unit Vendor Price: N/A")
+            elseif unit_vendor_price == 0 then
+                vendor_price_label:SetText("Unit Vendor Price: None")
+            else
+                vendor_price_label:SetText("Unit Vendor Price: " .. money.to_string(unit_vendor_price, nil, nil, aux.color.text.enabled))
+            end
         end
 
         refresh_button:Enable()
@@ -375,7 +390,9 @@ end
 function undercut(record, stack_size, stack)
     local price = ceil(record.unit_price * (stack and record.stack_size or stack_size))
     if not record.own then
-	    price = price - 1
+        if aux.account_data.undercut then
+            price = price - 1
+        end
     end
     return price / stack_size
 end

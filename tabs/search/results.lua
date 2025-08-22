@@ -6,6 +6,7 @@ local info = require 'aux.util.info'
 local filter_util = require 'aux.util.filter'
 local scan_util = require 'aux.util.scan'
 local scan = require 'aux.core.scan'
+local gui = require 'aux.gui'
 
 search_scan_id = 0
 
@@ -17,11 +18,11 @@ function update_real_time(enable)
 	if enable then
 		range_button:Hide()
 		real_time_button:Show()
-		search_box:SetPoint('LEFT', real_time_button, 'RIGHT', 4, 0)
+		search_box:SetPoint('LEFT', real_time_button, 'RIGHT', gui.is_blizzard() and 8 or 4, 0)
 	else
 		real_time_button:Hide()
 		range_button:Show()
-		search_box:SetPoint('LEFT', last_page_input, 'RIGHT', 4, 0)
+		search_box:SetPoint('LEFT', last_page_input, 'RIGHT', gui.is_blizzard() and 8 or 4, 0)
 	end
 end
 

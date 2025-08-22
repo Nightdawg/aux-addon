@@ -708,7 +708,7 @@ local methods = {
 
     UpdateRows = function(self)
 	    if self.rowInfo.numDisplayRows > getn(self.rows) then
-		    self.contentFrame:SetPoint('BOTTOMRIGHT', -15, 0)
+		    self.contentFrame:SetPoint('BOTTOMRIGHT', gui.is_blizzard() and -30 or -15, 0)
 	    else
 		    self.contentFrame:SetPoint('BOTTOMRIGHT', 0, 0)
 	    end
@@ -723,17 +723,32 @@ local methods = {
 
         for _, cell in self.headCells do
             local tex = cell:GetNormalTexture()
-            tex:SetTexture[[Interface\AddOns\aux-AddOn\WorldStateFinalScore-Highlight]]
-            tex:SetTexCoord(.017, 1, .083, .909)
-            tex:SetAlpha(.5)
+            if not gui.is_blizzard() then
+                tex:SetTexture[[Interface\AddOns\aux-AddOn\WorldStateFinalScore-Highlight]]
+                tex:SetTexCoord(.017, 1, .083, .909)
+                tex:SetAlpha(.5)
+            else
+                tex:SetTexture([[Interface\QuestFrame\UI-QuestTitleHighlight]])
+                tex:SetTexCoord(0.1, 0.8, 0, 1)
+                tex:SetVertexColor(1, 1, 1)
+            end
         end
 
         if getn(self.sorts) > 0 then
             local last_sort = self.sorts[1]
+            local tex = self.headCells[last_sort.index]:GetNormalTexture()
             if last_sort.descending then
-                self.headCells[last_sort.index]:GetNormalTexture():SetTexture(.8, .6, 1, .8)
+                if not gui.is_blizzard() then
+                    tex:SetTexture(.8, .6, 1, .8)
+                else
+                    tex:SetVertexColor(0.75, .5, 1)
+                end
             else
-                self.headCells[last_sort.index]:GetNormalTexture():SetTexture(.6, .8, 1, .8)
+                if not gui.is_blizzard() then
+                    tex:SetTexture(.6, .8, 1, .8)
+                else
+                    tex:SetVertexColor(.5, .75, 1)
+                end
             end
         end
 
@@ -916,7 +931,7 @@ local methods = {
 function M.new(parent, rows, columns)
     local rt = CreateFrame('Frame', nil, parent)
     rt.columns = columns
-    rt.ROW_HEIGHT = (parent:GetHeight() - HEAD_HEIGHT - HEAD_SPACE) / rows
+    rt.ROW_HEIGHT = ((parent:GetHeight() / parent:GetEffectiveScale()) - HEAD_HEIGHT - HEAD_SPACE) / rows
     rt.expanded = {}
     rt.handlers = {}
     rt.sorts = {}
@@ -947,19 +962,12 @@ function M.new(parent, rows, columns)
     scrollFrame:SetAllPoints(contentFrame)
     rt.scrollFrame = scrollFrame
     FauxScrollFrame_Update(rt.scrollFrame, 0, rows, rt.ROW_HEIGHT)
-
-    local scrollBar = _G[scrollFrame:GetName() .. 'ScrollBar']
-    scrollBar:ClearAllPoints()
-    scrollBar:SetPoint('TOPRIGHT', rt, -4, -HEAD_HEIGHT)
-    scrollBar:SetPoint('BOTTOMRIGHT', rt, -4, 4)
-    scrollBar:SetWidth(10)
-    local thumbTex = scrollBar:GetThumbTexture()
-    thumbTex:SetPoint('CENTER', 0, 0)
-    thumbTex:SetTexture(aux.color.content.background())
-    thumbTex:SetHeight(150)
-    thumbTex:SetWidth(scrollBar:GetWidth())
-    _G[scrollBar:GetName() .. 'ScrollUpButton']:Hide()
-    _G[scrollBar:GetName() .. 'ScrollDownButton']:Hide()
+    
+    gui.set_scrollbar_style(scrollFrame, not gui.is_blizzard() and {
+        {'TOPRIGHT', parent, -4, -HEAD_HEIGHT}, {'BOTTOMRIGHT', parent, -4, 4} -- Default
+    } or {
+        {'TOPRIGHT', parent, -7, -20}, {'BOTTOMRIGHT', parent, -7, 18} -- Blizzard
+    })
 
     rt.headCells = {}
     for i, column in ipairs(rt.columns) do
@@ -986,18 +994,26 @@ function M.new(parent, rows, columns)
         text:SetAllPoints()
 
         local tex = cell:CreateTexture()
+        local highlight = cell:CreateTexture()
         tex:SetAllPoints()
-        tex:SetTexture([[Interface\AddOns\aux-AddOn\WorldStateFinalScore-Highlight]])
-        tex:SetTexCoord(.017, 1, .083, .909)
-        tex:SetAlpha(.5)
-        cell:SetNormalTexture(tex)
+        highlight:SetAllPoints()
+        if not gui.is_blizzard() then
+            tex:SetTexture([[Interface\AddOns\aux-AddOn\WorldStateFinalScore-Highlight]])
+            tex:SetTexCoord(.017, 1, .083, .909)
+            tex:SetAlpha(.5)
 
-        local tex = cell:CreateTexture()
-        tex:SetAllPoints()
-        tex:SetTexture([[Interface\Buttons\UI-Listbox-Highlight]])
-        tex:SetTexCoord(.025, .957, .087, .931)
-        tex:SetAlpha(.2)
-        cell:SetHighlightTexture(tex)
+            highlight:SetTexture([[Interface\Buttons\UI-Listbox-Highlight]])
+            highlight:SetTexCoord(.025, .957, .087, .931)
+        else
+            tex:SetTexture([[Interface\QuestFrame\UI-QuestTitleHighlight]])
+            tex:SetTexCoord(0.1, 0.8, 0, 1)
+
+            highlight:SetTexture([[Interface\QuestFrame\UI-QuestTitleHighlight]])
+            highlight:SetTexCoord(0.1, 0.8, 0, 1)
+        end
+        highlight:SetAlpha(.2)
+        cell:SetNormalTexture(tex)
+        cell:SetHighlightTexture(highlight)
 
         tinsert(rt.headCells, cell)
     end
@@ -1021,7 +1037,11 @@ function M.new(parent, rows, columns)
         end
         local highlight = row:CreateTexture()
         highlight:SetAllPoints()
-        highlight:SetTexture(1, .9, 0, .5)
+        if not gui.is_blizzard() then
+            highlight:SetTexture(1, .9, 0, .5)
+        else
+            highlight:SetTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
+        end
         highlight:Hide()
         row.highlight = highlight
 
@@ -1045,10 +1065,16 @@ function M.new(parent, rows, columns)
                 cell:SetPoint('TOPLEFT', row.cells[j - 1], 'TOPRIGHT')
             end
 
-            if mod(j, 2) == 1 then
+            if gui.is_blizzard() or mod(j, 2) == 1 then
                 local tex = cell:CreateTexture()
                 tex:SetAllPoints()
-                tex:SetTexture(.3, .3, .3, .2)
+                if not gui.is_blizzard() then
+                    tex:SetTexture(.3, .3, .3, .2)
+                else
+                    tex:SetTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
+                    tex:SetTexCoord(0.1, 0.8, 0, 1)
+                    tex:SetAlpha(0.3)
+                end
             end
 
             if column.init then
