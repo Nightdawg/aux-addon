@@ -24,9 +24,9 @@ M.color = immutable-{
 	text = immutable-{enabled = C(255, 254, 250, 1), disabled = C(147, 151, 139, 1)},
 	label = immutable-{enabled = C(216, 225, 211, 1), disabled = C(150, 148, 140, 1)},
 	link = C(153, 255, 255, 1),
-	window = immutable-{background = C(24, 24, 24, .93), border = C(30, 30, 30, 1)},
-	panel = immutable-{background = C(24, 24, 24, 1), border = C(255, 255, 255, .03)},
-	content = immutable-{background = C(42, 42, 42, 1), border = C(0, 0, 0, 0)},
+	window = immutable-{background = C(0, 0, 0, .93), border = C(20, 20, 20, 1)},
+	panel = immutable-{background = C(10, 10, 10, 1), border = C(255, 255, 255, .03)},
+	content = immutable-{background = C(22, 22, 22, 1), border = C(0, 0, 0, 0)},
 	state = immutable-{enabled = C(70, 140, 70, 1), disabled = C(140, 70, 70, 1)},
 
 	tooltip = immutable-{
